@@ -7,9 +7,6 @@ from setuptools import setup, find_packages
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
-with open('HISTORY.rst') as history_file:
-    history = history_file.read()
-
 requirements = [
     "click",
     "requests",
@@ -22,13 +19,11 @@ setup_requirements = [ ]
 
 test_requirements = [ ]
 
-description = "Ce projet est un petit outil en ligne de commande, permettant de détecter les rendez-vous disponibles dans votre département pour recevoir un vaccin contre la covid19."
-# In case of long description
-# description +=
+description = "Ce projet est un petit outil en ligne de commande, permettant de détecter les rendez-vous disponibles "
+description += "dans votre département pour recevoir un vaccin contre la covid19."
 
 setup(
     author="Ludovic Rivallain",
-    author_email='ludovic.rivallain@gmail.com',
     python_requires='>=3.6',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
@@ -48,7 +43,7 @@ setup(
     },
     install_requires=requirements,
     license="MIT license",
-    long_description=readme + '\n\n' + history,
+    long_description=readme,
     include_package_data=True,
     keywords='vmdcli',
     name='vmdcli',
