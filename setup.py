@@ -40,6 +40,7 @@ setup(
         'Programming Language :: Python :: 3.8',
     ],
     description=description,
+    long_description_content_type = "text/markdown",
     entry_points={
         'console_scripts': [
             'vmd-cli=vmdcli.cli:main',
