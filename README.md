@@ -43,8 +43,9 @@ Options:
 
 ## Example
 
-```bash
+```
 vmd-cli --days 2 --dept 35
+# Output
 Looking for available appointements in departement 35 in the next 2 days...
 Last data update: 2 minutes
 Centre de vaccination COVID - Centre de vaccination du Naye - Vaccination Covid-19: 9 available appointements in the next 2 days
