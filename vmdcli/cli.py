@@ -1,4 +1,6 @@
 """Console script for vmdcli."""
+
+import sys
 import json
 import logging
 import os, sys
@@ -8,15 +10,10 @@ import requests
 from pytz import timezone
 import humanize
 from pushbullet import Pushbullet
-from version import __version__
 
 BASE_URL="https://vitemadose.gitlab.io/vitemadose"
 AVAILABLE_DAYS_CHOICES = ["1", "2", "7", "28", "49"]
 TZ = "Europe/Paris"
-
-headers = {
-    'User-Agent': f'vitemadose-cli v{__version__}',
-}
 
 logging.basicConfig(format='%(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -24,14 +21,30 @@ logger.setLevel(logging.INFO)
 logging.getLogger("requests").setLevel(logging.WARNING) # A bit too verbose
 logging.getLogger("urllib3").setLevel(logging.WARNING)  # A bit too verbose
 
+# Look for current module version
+try:
+    vmdcli_version = sys.modules['vmdcli'].__version__
+except KeyError:
+    from _version import __version__ as vmdcli_version
+headers = { 
+    'User-Agent': f'vitemadose-cli v{vmdcli_version}',
+}
 
 @click.command()
 @click.option(
+    '-v',
     '--verbose',
     help='Enable verbose mode',
     default=False,
     is_flag=True)
 @click.option(
+    '-s',
+    '--quiet',
+    help='Quiet mode',
+    default=False,
+    is_flag=True)
+@click.option(
+    '-c',
     '--chrono',
     help='Only look for "chronodoses"',
     default=False,
@@ -49,11 +62,13 @@ logging.getLogger("urllib3").setLevel(logging.WARNING)  # A bit too verbose
     '--pbtoken',
     help='Pushbullet token to send a notification',
     required=False)
-def main(verbose: bool, chrono: bool, days:str, dept:str, pbtoken: str):
+def main(verbose: bool, quiet: bool, chrono: bool, days:str, dept:str, pbtoken: str):
     """Look for available appointment(s) in the next X days in your departement.
     """
     if verbose:
         logger.setLevel(logging.DEBUG)
+    if quiet:
+        logger.setLevel(logging.CRITICAL)
     if not chrono:
         logger.info(f"Looking for available appointements in departement {dept} in the next {days} days...")
         _looking_period = f'{days}_days'

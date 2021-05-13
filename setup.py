@@ -3,7 +3,10 @@
 """The setup script."""
 
 from setuptools import setup, find_packages
-import vmdcli
+
+about = {}
+with open("vmdcli/_version.py") as f:
+    exec(f.read(), about)
 
 with open('README.md') as readme_file:
     readme = readme_file.read()
@@ -53,6 +56,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/lrivallain/vmdcli',
-    version=vmdcli.__version__,
+    version=about["__version__"],
     zip_safe=False,
 )
