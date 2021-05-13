@@ -8,13 +8,14 @@ import requests
 from pytz import timezone
 import humanize
 from pushbullet import Pushbullet
+from version import __version__
 
 BASE_URL="https://vitemadose.gitlab.io/vitemadose"
 AVAILABLE_DAYS_CHOICES = ["1", "2", "7", "28", "49"]
 TZ = "Europe/Paris"
 
 headers = {
-    'User-Agent': f'vitemadose-cli v0.1.1',
+    'User-Agent': f'vitemadose-cli v{__version__}',
 }
 
 logging.basicConfig(format='%(message)s', level=logging.DEBUG)
