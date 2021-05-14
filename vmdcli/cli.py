@@ -1,9 +1,9 @@
 """Console script for vmdcli."""
 
-import sys
 import json
 import logging
 import os, sys
+from time import sleep
 from datetime import datetime
 import click
 import requests
@@ -38,7 +38,7 @@ headers = {
     default=False,
     is_flag=True)
 @click.option(
-    '-s',
+    '-q',
     '--quiet',
     help='Quiet mode',
     default=False,
@@ -49,6 +49,12 @@ headers = {
     help='Only look for "chronodoses"',
     default=False,
     is_flag=True)
+@click.option(
+    '-s',
+    '--watch',
+    help='Watch mode, sleep X seconds before replaying',
+    type=int,
+    required=False)
 @click.option(
     '--days',
     help='Number of days to look at for available appointment(s)',
@@ -62,7 +68,7 @@ headers = {
     '--pbtoken',
     help='Pushbullet token to send a notification',
     required=False)
-def main(verbose: bool, quiet: bool, chrono: bool, days:str, dept:str, pbtoken: str):
+def main(verbose: bool, quiet: bool, chrono: bool, watch:int, days:str, dept:str, pbtoken: str):
     """Look for available appointment(s) in the next X days in your departement.
     """
     if verbose:
@@ -75,45 +81,62 @@ def main(verbose: bool, quiet: bool, chrono: bool, days:str, dept:str, pbtoken: 
     else:
         logger.info(f"Looking for available appointements in departement {dept} for 'chronodoses'")
         _looking_period = 'chronodose'
-    r = requests.get(f"{BASE_URL}/{dept}.json", headers=headers)
-    if r.status_code == 404:
-        # Easy one to understand
-        logger.error("Invalid departement number")
-        sys.exit(-1)
-    if r.status_code != requests.codes.ok:
-        r.raise_for_status()
-        # If not raise: juste leave in error
-        logger.error(f"Unable to process response with status code {r.status_code}")
-        sys.exit(-1)
-    try:
-        data = r.json()
-    except json.JSONDecodeError:
-        logger.error("Invalid json data")
-        sys.exit(-1)
+    last_notifications = []
+    while True:
+        new_last_notifications = []
+        r = requests.get(f"{BASE_URL}/{dept}.json", headers=headers)
+        if r.status_code == 404:
+            # Easy one to understand
+            logger.error("Invalid departement number")
+            sys.exit(-1)
+        if r.status_code != requests.codes.ok:
+            r.raise_for_status()
+            # If not raise: juste leave in error
+            logger.error(f"Unable to process response with status code {r.status_code}")
+            sys.exit(-1)
+        try:
+            data = r.json()
+        except json.JSONDecodeError:
+            logger.error("Invalid json data")
+            sys.exit(-1)
 
-    last_update = datetime.fromisoformat(data.get('last_updated'))
-    delta = datetime.now(timezone(TZ))-last_update
-    logger.info(f"Last data update: {humanize.naturaldelta(delta)}")
-    for centre in data.get("centres_disponibles", []):
-        for app_sch in centre.get('appointment_schedules', []):
-            if app_sch.get('name') == _looking_period:
-                nb_slots = app_sch.get('total', 0)
-                if nb_slots > 0:
-                    if not chrono:
-                        _title = f"{centre['nom']}: {nb_slots} available appointements in the next {days} days"
-                    else:
-                        _title = f"{centre['nom']}: {nb_slots} 'chronodoses' availables"
-                    logger.info(_title)
-                    logger.info(f"  > {centre['url']}")
-                    logger.info(f"  > Vaccins proposés: {','.join(centre.get('vaccine_type', []))}")
-                    logger.info(f"  > Type d'établissement: {centre.get('type')}")
-                    logger.debug(f"  > Metadata: {json.dumps(centre.get('metadata'), indent=4)}")
-                    if pbtoken:
-                        pb = Pushbullet(pbtoken)
-                        pb.push_link(_title, centre['url'])
-                        logger.debug("Pushbullet notification sent")
+        last_update = datetime.fromisoformat(data.get('last_updated'))
+        delta = datetime.now(timezone(TZ))-last_update
+        logger.info(f"Last data update: {humanize.naturaldelta(delta)}")
+        for centre in data.get("centres_disponibles", []):
+            for app_sch in centre.get('appointment_schedules', []):
+                if app_sch.get('name') == _looking_period:
+                    nb_slots = app_sch.get('total', 0)
+                    if nb_slots > 0:
+                        if not chrono:
+                            _title = f"{centre['nom']}: {nb_slots} available appointements in the next {days} days"
+                        else:
+                            _title = f"{centre['nom']}: {nb_slots} 'chronodoses' availables"
+                        logger.info(_title)
+                        logger.info(f"  > {centre['url']}")
+                        logger.info(f"  > Vaccins proposés: {','.join(centre.get('vaccine_type', []))}")
+                        logger.info(f"  > Type d'établissement: {centre.get('type')}")
+                        logger.debug(f"  > Metadata: {json.dumps(centre.get('metadata'), indent=4)}")
+                        if pbtoken:
+                            if (centre['nom'], nb_slots) not in last_notifications:
+                                pb = Pushbullet(pbtoken)
+                                pb.push_link(_title, centre['url'])
+                                logger.debug("Pushbullet notification sent")
+                            else:
+                                logger.debug("Already notified")
+                            new_last_notifications.append((centre['nom'], nb_slots))
+            else:
+                logger.debug(f"{centre['nom']}: no available appointment")
+        if not watch:
+            return 0
         else:
-            logger.debug(f"{centre['nom']}: no available appointment")
+            if watch < 1:
+                logger.warning("La période minimal de l'option watch est d'une seconde.")
+                watch = 1
+            sleep(watch)
+            last_notifications = new_last_notifications
+            print("\033c")
+            logger.debug(f"Already notified: {last_notifications}")
     return 0
 
 
