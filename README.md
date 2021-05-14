@@ -35,8 +35,9 @@ Usage: vmd-cli [OPTIONS]
 
 Options:
   -v, --verbose         Enable verbose mode
-  -s, --quiet           Quiet mode
+  -q, --quiet           Quiet mode
   -c, --chrono          Only look for "chronodoses"
+  -s, --watch INTEGER   Watch mode, sleep X seconds before replaying
   --days [1|2|7|28|49]  Number of days to look at for available appointment(s)
   --dept TEXT           Your departement number
   --pbtoken TEXT        Pushbullet token to send a notification
@@ -68,6 +69,13 @@ CHU BORDEAUX - SITE PELLEGRIN: 1 'chronodoses' availables
   > Vaccins proposés: Pfizer-BioNTech
   > Type d'établissement: vaccination-center
 ```
+
+Chercher, toutes les 60 secondes, une 'chronodose' dans un département:
+
+```
+vmd-cli --chrono --dept 33 --watch 60
+```
+
 
 # Notifications
 
