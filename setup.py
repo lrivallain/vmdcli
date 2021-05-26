@@ -16,7 +16,8 @@ requirements = [
     "requests",
     "pytz",
     "humanize",
-    "pushbullet.py"
+    "pushbullet.py",
+    "python-dateutil"
 ]
 
 setup_requirements = [ ]
