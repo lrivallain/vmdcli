@@ -16,12 +16,17 @@ requirements = [
     "requests",
     "pytz",
     "humanize",
-    "pushbullet.py"
+    "pushbullet.py",
+    "python-dateutil"
 ]
 
-setup_requirements = [ ]
+setup_requirements = [
+    'pytest-runner'
+]
 
-test_requirements = [ ]
+test_requirements = [
+    'pytest>=3'
+]
 
 description = "Ce projet est un petit outil en ligne de commande, permettant de détecter les rendez-vous disponibles "
 description += "dans votre département pour recevoir un vaccin contre la covid19."

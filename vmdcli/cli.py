@@ -10,6 +10,8 @@ import requests
 from pytz import timezone
 import humanize
 from pushbullet import Pushbullet
+from dateutil import parser as dtparser
+
 
 BASE_URL="https://vitemadose.gitlab.io/vitemadose"
 AVAILABLE_DAYS_CHOICES = ["1", "2", "7", "28", "49"]
@@ -99,8 +101,10 @@ def main(verbose: bool, quiet: bool, chrono: bool, watch:int, days:str, dept:str
         except json.JSONDecodeError:
             logger.error("Invalid json data")
             sys.exit(-1)
-
-        last_update = datetime.fromisoformat(data.get('last_updated'))
+        if sys.version_info >= (3, 7):
+            last_update = datetime.fromisoformat(data.get('last_updated'))
+        else:
+            last_update = dtparser.isoparse(data.get('last_updated'))
         delta = datetime.now(timezone(TZ))-last_update
         logger.info(f"Last data update: {humanize.naturaldelta(delta)}")
         for centre in data.get("centres_disponibles", []):
